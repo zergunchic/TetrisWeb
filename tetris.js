@@ -4,6 +4,7 @@ var blueTile = new Image();
 var redTile = new Image();
 var orangeTile = new Image();
 var greenTile = new Image();
+loadResources();
 var tilesArray = [blueTile,redTile,orangeTile,greenTile];
 var currentObjectsToDraw = [];
 
@@ -15,7 +16,6 @@ for (var i = 0; i < tetrisMap.length; i++) {
 // INITIAL BLOCK
 canvas.width  = 320;
 canvas.height = 700;
-loadResources();
 
 
 // CLASS BLOCK
@@ -32,6 +32,17 @@ class Cube{
 	paint(){
 		for (let element of this.elements){
 			ctx.drawImage(element.tileColor, element.posX, element.posY);
+			element.gravity();
+		}
+	}
+	moveLeft(){
+		for (let element of this.elements){
+			element.move('left');
+		}
+	}
+	moveRight(){
+		for (let element of this.elements){
+			element.move('right');
 		}
 	}
 }
@@ -43,7 +54,19 @@ class Element{
 	this.posY = tileY*16;
 	this.tileColor = tileColor;
 	}
-
+	gravity(){
+		this.tileY=this.tileY+1;
+		this.posY = this.tileY*16;
+	}
+	move(direction){
+		if(direction == 'left'){
+			this.tileX =this.tileX-1;
+			this.posX = this.tileX*16;
+		} else {
+			this.tileX =this.tileX+1;
+			this.posX = this.tileX*16;
+		}
+	}
 }
 
 //MAIN LOOP BISENESS LOGIC
@@ -60,14 +83,23 @@ function drawObjects(){
 function render(){
 	let objectToDraw = new Cube();
 	currentObjectsToDraw.push(objectToDraw);
-	setInterval(function(){drawObjects()}, 500);
+	setInterval(function(){drawObjects()}, 100);
 }
 
+//OBJECT MANIPULATION
+document.addEventListener('keydown', function(event) {
+  if (event.code == 'ArrowLeft') {
+    currentObjectsToDraw[0].moveLeft();
+  }
+  if(event.code == 'ArrowRight'){
+  	currentObjectsToDraw[0].moveRight();
+  }
+});
 
 // LOADING IMAGES
 function loadResources(){
 	blueTile.src = 'resources/blue_tile16.png';
 	redTile.src = 'resources/red_tile16.png';
-	orangeTile = 'resources/orange_tile16.png';
-	greenTile = 'resources/green_tile16.png';
+	orangeTile.src = 'resources/orange_tile16.png';
+	greenTile.src = 'resources/green_tile16.png';
 }
