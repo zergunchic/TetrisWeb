@@ -6,12 +6,16 @@ var orangeTile = new Image();
 var greenTile = new Image();
 loadResources();
 var tilesArray = [blueTile,redTile,orangeTile,greenTile];
-var currentObjectsToDraw = [];
-
+var currentDrawedObject;
+var manager;
+var gravityCounterMax = 20;
+var gravityCounter = 0;
 //Default tetris fild size - 20 x 10 (22 x 10)
-var tetrisMap = Array(30);
+var gameFieldXMax = 10;
+var gameFieldYMax = 32;
+var tetrisMap = Array(gameFieldYMax+2);
 for (var i = 0; i < tetrisMap.length; i++) { 
-    tetrisMap[i] = Array(10); 
+    tetrisMap[i] = Array(gameFieldXMax); 
 } 
 // INITIAL BLOCK
 canvas.width  = 320;
@@ -19,40 +23,87 @@ canvas.height = 700;
 
 
 // CLASS BLOCK
-class Cube{
-	constructor(){
-		let randomNumberForColorChoose = Math.floor(Math.random()*4);
-		this.tileColor = tilesArray[randomNumberForColorChoose];
-		this.elements=[];
-		this.elements.push(new Element(5,0,this.tileColor));
-		this.elements.push(new Element(6,0,this.tileColor));
-		this.elements.push(new Element(5,1,this.tileColor));
-		this.elements.push(new Element(6,1,this.tileColor));
-	}
-	paint(){
-		for (let element of this.elements){
-			ctx.drawImage(element.tileColor, element.posX, element.posY);
-			element.gravity();
+class CollisionManager{
+	checkCollisionsXLeft(){
+		for(let element of currentDrawedObject.elementsArray){
+			let posX = element.tileX;
+			let posY = element.tileY;
+			if(posX<=0) return false;
+			if(tetrisMap[posY][posX-1] instanceof Element) return false;
+			return true;
 		}
 	}
-	moveLeft(){
-		for (let element of this.elements){
-			element.move('left');
+	checkCollisionsXRight(){
+		for(let element of currentDrawedObject.elementsArray){
+			let posX = element.tileX;
+			let posY = element.tileY;
+			if(posX>=gameFieldXMax) return false;
+			if(tetrisMap[posY][posX+1] instanceof Element) return false;
+			return true;
 		}
 	}
-	moveRight(){
-		for (let element of this.elements){
-			element.move('right');
+	checkCollisionsY(){
+		for(let element of currentDrawedObject.elementsArray){
+			let posX = element.tileX;
+			let posY = element.tileY;
+			if(posY+1>=gameFieldYMax) return false;
+			if(tetrisMap[posY+2][posX] instanceof Element) return false;
+			return true;
 		}
 	}
 }
+
+class Figure{
+	constructor(figureType){
+		this.elementsArray = [];
+		this.colorNumber = Math.floor(Math.random()*4);
+		this.tile = tilesArray[this.colorNumber];
+		switch(figureType){
+			case 'Cube':
+				this.elementsArray.push(new Element(4,0,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(5,1,this.tile));
+				this.elementsArray.push(new Element(4,1,this.tile));
+		}
+	}
+
+	moveAll(direction){
+		for(let element of this.elementsArray){
+			element.move(direction);
+		}
+	}
+
+	gravityAll(){
+		for(let element of this.elementsArray){
+			element.gravity();
+		}
+	}
+
+	paintElements(){
+		for(let element of this.elementsArray){
+			element.paintElement();
+		}	
+	}
+
+	freeze(){
+		for(let element of this.elementsArray){
+			tetrisMap[element.tileY][element.tileX] = element;
+		}
+	}
+
+}
+
 class Element{
 	constructor(tileX,tileY, tileColor){
-	this.tileX = tileX;
-	this.tileY = tileY;
-	this.posX = tileX*16;
-	this.posY = tileY*16;
-	this.tileColor = tileColor;
+		this.tileX = tileX;
+		this.tileY = tileY;
+		this.posX = tileX*16;
+		this.posY = tileY*16;
+		this.tileColor = tileColor;
+		this.elementIsActive = true;
+	}
+	paintElement(){
+		ctx.drawImage(this.tileColor, this.posX, this.posY);
 	}
 	gravity(){
 		this.tileY=this.tileY+1;
@@ -67,32 +118,54 @@ class Element{
 			this.posX = this.tileX*16;
 		}
 	}
+
 }
 
 //MAIN LOOP BISENESS LOGIC
+currentDrawedObject = new Figure('Cube');
 render();
 
 // FUNCTIONAL BLOCK
 function drawObjects(){
+	if(gravityCounter == gravityCounterMax){
+		if(!manager.checkCollisionsY()){
+			currentDrawedObject.freeze();
+			createNewObject();
+			return;
+		}
+		currentDrawedObject.gravityAll();
+		gravityCounter = 0;
+	} 
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	for(drawobj of currentObjectsToDraw){
-		drawobj.paint();
+	for(i=0;i<tetrisMap.length;i++){
+		for(j=0;j<tetrisMap[0].length;j++){
+			if(tetrisMap[i][j] instanceof Element)
+				tetrisMap[i][j].paintElement();
+		}
 	}
+	currentDrawedObject.paintElements();
+	gravityCounter++;
 }
 
 function render(){
-	let objectToDraw = new Cube();
-	currentObjectsToDraw.push(objectToDraw);
-	setInterval(function(){drawObjects()}, 100);
+	manager = new CollisionManager();
+	setInterval(function(){drawObjects()}, 25);
 }
 
+function createNewObject(){
+	currentDrawedObject = new Figure('Cube');
+}
 //OBJECT MANIPULATION
 document.addEventListener('keydown', function(event) {
-  if (event.code == 'ArrowLeft') {
-    currentObjectsToDraw[0].moveLeft();
+  if (event.code == 'ArrowLeft' && manager.checkCollisionsXLeft()) {
+    currentDrawedObject.moveAll('left');
   }
-  if(event.code == 'ArrowRight'){
-  	currentObjectsToDraw[0].moveRight();
+  if(event.code == 'ArrowRight' && manager.checkCollisionsXRight()){
+  	currentDrawedObject.moveAll('right');
+  }
+  if(event.code == 'ArrowDown'){
+  	gravityCounter = 0;
+  	gravityCounterMax = 5;
   }
 });
 
