@@ -5,9 +5,11 @@ const redTile = new Image();
 const orangeTile = new Image();
 const greenTile = new Image();
 loadResources();
+var updateTime = 100;
 var curTime = new Date().getTime();
 var keyPressedSet = new Set();
 var tilesArray = [blueTile,redTile,orangeTile,greenTile];
+var figureArray = ['Cube','Line','straightG','backG','T'];
 var currentDrawedObject;
 //Default tetris fild size - 20 x 10 (22 x 10)
 var gameFieldXMax = 10;
@@ -57,12 +59,42 @@ class Figure{
 		this.elementsArray = [];
 		this.colorNumber = Math.floor(Math.random()*4);
 		this.tile = tilesArray[this.colorNumber];
+		this.figureType = figureType;
+		this.angle = 0;
 		switch(figureType){
 			case 'Cube':
 				this.elementsArray.push(new Element(4,0,this.tile));
 				this.elementsArray.push(new Element(5,0,this.tile));
 				this.elementsArray.push(new Element(5,1,this.tile));
 				this.elementsArray.push(new Element(4,1,this.tile));
+				break;
+			case 'Line':
+				this.elementsArray.push(new Element(4,0,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(6,0,this.tile));
+				this.elementsArray.push(new Element(7,0,this.tile));
+				break;
+
+			case 'straightG':
+				this.elementsArray.push(new Element(4,0,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(6,0,this.tile));
+				this.elementsArray.push(new Element(6,1,this.tile));
+				break;
+
+			case 'backG':
+				this.elementsArray.push(new Element(4,0,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(6,0,this.tile));
+				this.elementsArray.push(new Element(4,1,this.tile));
+				break;
+
+			case 'T':
+				this.elementsArray.push(new Element(4,0,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(6,0,this.tile));
+				this.elementsArray.push(new Element(5,1,this.tile));
+				break;
 		}
 	}
 
@@ -73,12 +105,13 @@ class Figure{
 	}
 
 	rotate(){
-		
+		this.angle+=90;
+		Math.sin(this.angle/360*Math.PI)
 	}
 
 	gravityAll(){
 		for(let element of this.elementsArray){
-			element.gravity();
+			element.gravity(1);
 		}
 	}
 
@@ -108,8 +141,8 @@ class Element{
 	paintElement(){
 		ctx.drawImage(this.tileColor, this.posX, this.posY);
 	}
-	gravity(){
-		this.tileY=this.tileY+1;
+	gravity(dropNumber){
+		this.tileY=this.tileY+dropNumber;
 		this.posY = this.tileY*16;
 	}
 	move(direction){
@@ -132,14 +165,28 @@ render();
 // FUNCTIONAL BLOCK
 function drawObjects(){
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	let elementCounter = 0;
 	for(i=0;i<tetrisMap.length;i++){
 		for(j=0;j<tetrisMap[0].length;j++){
-			if(tetrisMap[i][j] instanceof Element)
+			if(tetrisMap[i][j] instanceof Element){
 				tetrisMap[i][j].paintElement();
+				elementCounter++;
+				if(i<=2){
+					clearElementArray();
+				}
+			}
 		}
+		if(elementCounter === gameFieldXMax){
+			for(j=0;j<tetrisMap[0].length;j++){
+				tetrisMap[i][j] = undefined;
+			}
+			dropUpperLines(i,1);
+		}
+		elementCounter=0;
 	}
 	currentDrawedObject.paintElements();
 }
+
 
 function gravityImpact(){
 	if(!manager.checkCollisionsY()){
@@ -153,22 +200,45 @@ function gravityImpact(){
 function update(lastTime){
 	let timeStamp = new Date().getTime();
 	let timeLast = timeStamp - lastTime;
-	if(timeLast >=100){
+	if(timeLast >=updateTime){
 		gravityImpact();
 		curTime = new Date().getTime();
 	}
+}
 
+function dropUpperLines(threshold, verticalCellsDrop){
+	for(i=threshold;i>0;i--){
+		for(j=0;j<tetrisMap[0].length;j++){
+			if(tetrisMap[i][j] instanceof Element){
+				tetrisMap[i][j].gravity(1);
+				tetrisMap[i+verticalCellsDrop][j] = tetrisMap[i][j];
+				tetrisMap[i][j] = undefined;
+			}
+		}
+	}
+}
+
+function clearElementArray(){
+	for(i=0;i<tetrisMap.length;i++){
+		for(j=0;j<tetrisMap[0].length;j++){
+			if(tetrisMap[i][j] instanceof Element){
+				tetrisMap[i][j] = undefined;
+			}
+		}
+	}
 }
 
 function render(){
 	setInterval(()=>{
 		drawObjects();
 		update(curTime);
-	}, 1000/60);
+	}, 0);
 }
 
 function createNewObject(){
-	currentDrawedObject = new Figure('Cube');
+	updateTime = 100;
+	let randnumber = Math.floor(Math.random()*5);
+	currentDrawedObject = new Figure(figureArray[randnumber]);
 }
 //OBJECT MANIPULATION
 document.addEventListener('keydown', function(event) {
@@ -178,7 +248,11 @@ document.addEventListener('keydown', function(event) {
   if(event.code == 'ArrowRight' && manager.checkCollisionsXRight()){
   	currentDrawedObject.moveAll('right');
   }
-  if(event.code == 'ArrowDown'){
+  if(event.code == 'ArrowUP' && manager.checkRotationCollision()){
+  	currentDrawedObject.rotate();
+  }
+  if(event.code == 'Space'){
+  		updateTime = 0;
   }
 });
 
