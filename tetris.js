@@ -1,26 +1,25 @@
-var canvas = document.getElementById("tetriscanvas");
-var ctx = canvas.getContext("2d");
-var blueTile = new Image();
-var redTile = new Image();
-var orangeTile = new Image();
-var greenTile = new Image();
+const canvas = document.getElementById("tetriscanvas");
+const ctx = canvas.getContext("2d");
+const blueTile = new Image();
+const redTile = new Image();
+const orangeTile = new Image();
+const greenTile = new Image();
 loadResources();
+var curTime = new Date().getTime();
+var keyPressedSet = new Set();
 var tilesArray = [blueTile,redTile,orangeTile,greenTile];
 var currentDrawedObject;
-var manager;
-var gravityCounterMax = 20;
-var gravityCounter = 0;
 //Default tetris fild size - 20 x 10 (22 x 10)
 var gameFieldXMax = 10;
-var gameFieldYMax = 32;
-var tetrisMap = Array(gameFieldYMax+2);
+var gameFieldYMax = 22;
+
+var tetrisMap = Array(gameFieldYMax);
 for (var i = 0; i < tetrisMap.length; i++) { 
     tetrisMap[i] = Array(gameFieldXMax); 
 } 
 // INITIAL BLOCK
 canvas.width  = 320;
 canvas.height = 700;
-
 
 // CLASS BLOCK
 class CollisionManager{
@@ -30,26 +29,26 @@ class CollisionManager{
 			let posY = element.tileY;
 			if(posX<=0) return false;
 			if(tetrisMap[posY][posX-1] instanceof Element) return false;
-			return true;
 		}
+		return true;
 	}
 	checkCollisionsXRight(){
 		for(let element of currentDrawedObject.elementsArray){
 			let posX = element.tileX;
 			let posY = element.tileY;
-			if(posX>=gameFieldXMax) return false;
+			if(posX+1>=gameFieldXMax) return false;
 			if(tetrisMap[posY][posX+1] instanceof Element) return false;
-			return true;
 		}
+		return true;
 	}
 	checkCollisionsY(){
 		for(let element of currentDrawedObject.elementsArray){
 			let posX = element.tileX;
 			let posY = element.tileY;
 			if(posY+1>=gameFieldYMax) return false;
-			if(tetrisMap[posY+2][posX] instanceof Element) return false;
-			return true;
+			if(tetrisMap[posY+1][posX] instanceof Element) return false;
 		}
+		return true;
 	}
 }
 
@@ -71,6 +70,10 @@ class Figure{
 		for(let element of this.elementsArray){
 			element.move(direction);
 		}
+	}
+
+	rotate(){
+		
 	}
 
 	gravityAll(){
@@ -122,20 +125,12 @@ class Element{
 }
 
 //MAIN LOOP BISENESS LOGIC
+const manager = new CollisionManager();
 currentDrawedObject = new Figure('Cube');
 render();
 
 // FUNCTIONAL BLOCK
 function drawObjects(){
-	if(gravityCounter == gravityCounterMax){
-		if(!manager.checkCollisionsY()){
-			currentDrawedObject.freeze();
-			createNewObject();
-			return;
-		}
-		currentDrawedObject.gravityAll();
-		gravityCounter = 0;
-	} 
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	for(i=0;i<tetrisMap.length;i++){
 		for(j=0;j<tetrisMap[0].length;j++){
@@ -144,12 +139,32 @@ function drawObjects(){
 		}
 	}
 	currentDrawedObject.paintElements();
-	gravityCounter++;
+}
+
+function gravityImpact(){
+	if(!manager.checkCollisionsY()){
+		currentDrawedObject.freeze();
+		createNewObject();
+		return;
+	}
+	currentDrawedObject.gravityAll();
+}
+
+function update(lastTime){
+	let timeStamp = new Date().getTime();
+	let timeLast = timeStamp - lastTime;
+	if(timeLast >=100){
+		gravityImpact();
+		curTime = new Date().getTime();
+	}
+
 }
 
 function render(){
-	manager = new CollisionManager();
-	setInterval(function(){drawObjects()}, 25);
+	setInterval(()=>{
+		drawObjects();
+		update(curTime);
+	}, 1000/60);
 }
 
 function createNewObject(){
@@ -164,8 +179,6 @@ document.addEventListener('keydown', function(event) {
   	currentDrawedObject.moveAll('right');
   }
   if(event.code == 'ArrowDown'){
-  	gravityCounter = 0;
-  	gravityCounterMax = 5;
   }
 });
 
