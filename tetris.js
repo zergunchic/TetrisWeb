@@ -107,7 +107,7 @@ class Figure{
 				this.elementsArray.push(new Element(4,1,this.tile));
 				this.elementsArray.push(new Element(5,1,this.tile));
 				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(6,1,this.tile));
+				this.elementsArray.push(new Element(6,0,this.tile));
 				break;
 		}
 	}
