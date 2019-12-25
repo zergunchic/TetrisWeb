@@ -9,7 +9,7 @@ var updateTime = 100;
 var curTime = new Date().getTime();
 var keyPressedSet = new Set();
 var tilesArray = [blueTile,redTile,orangeTile,greenTile];
-var figureArray = ['Cube','Line','straightG','backG','T'];
+var figureArray = ['Cube','Line','straightG','backG','T', 'straightR', 'backR'];
 var currentDrawedObject;
 //Default tetris fild size - 20 x 10 (22 x 10)
 var gameFieldXMax = 10;
@@ -63,23 +63,23 @@ class Figure{
 		this.angle = 0;
 		switch(figureType){
 			case 'Cube':
-				this.elementsArray.push(new Element(4,0,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(5,1,this.tile));
-				this.elementsArray.push(new Element(4,1,this.tile));
+				this.elementsArray.push(new Element(4,0,this.tile,0));
+				this.elementsArray.push(new Element(5,0,this.tile,0));
+				this.elementsArray.push(new Element(5,1,this.tile,0));
+				this.elementsArray.push(new Element(4,1,this.tile,0));
 				break;
 			case 'Line':
-				this.elementsArray.push(new Element(4,0,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(6,0,this.tile));
-				this.elementsArray.push(new Element(7,0,this.tile));
+				this.elementsArray.push(new Element(4,0,this.tile,2));
+				this.elementsArray.push(new Element(5,0,this.tile,1));
+				this.elementsArray.push(new Element(6,0,this.tile,0));
+				this.elementsArray.push(new Element(7,0,this.tile,1));
 				break;
 
 			case 'straightG':
-				this.elementsArray.push(new Element(4,0,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(6,0,this.tile));
-				this.elementsArray.push(new Element(6,1,this.tile));
+				this.elementsArray.push(new Element(4,0,this.tile,1));
+				this.elementsArray.push(new Element(5,0,this.tile,0));
+				this.elementsArray.push(new Element(6,0,this.tile,1));
+				this.elementsArray.push(new Element(6,1,this.tile,2));
 				break;
 
 			case 'backG':
@@ -94,6 +94,20 @@ class Figure{
 				this.elementsArray.push(new Element(5,0,this.tile));
 				this.elementsArray.push(new Element(6,0,this.tile));
 				this.elementsArray.push(new Element(5,1,this.tile));
+				break;
+
+			case 'straightR':
+				this.elementsArray.push(new Element(4,0,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(5,1,this.tile));
+				this.elementsArray.push(new Element(6,1,this.tile));
+				break;
+
+			case 'backR':
+				this.elementsArray.push(new Element(4,1,this.tile));
+				this.elementsArray.push(new Element(5,1,this.tile));
+				this.elementsArray.push(new Element(5,0,this.tile));
+				this.elementsArray.push(new Element(6,1,this.tile));
 				break;
 		}
 	}
@@ -130,13 +144,13 @@ class Figure{
 }
 
 class Element{
-	constructor(tileX,tileY, tileColor){
+	constructor(tileX,tileY, tileColor,rotationRate){
 		this.tileX = tileX;
 		this.tileY = tileY;
 		this.posX = tileX*16;
 		this.posY = tileY*16;
 		this.tileColor = tileColor;
-		this.elementIsActive = true;
+		this.rotationRate = rotationRate;
 	}
 	paintElement(){
 		ctx.drawImage(this.tileColor, this.posX, this.posY);
@@ -237,7 +251,7 @@ function render(){
 
 function createNewObject(){
 	updateTime = 100;
-	let randnumber = Math.floor(Math.random()*5);
+	let randnumber = Math.floor(Math.random()*figureArray.length);
 	currentDrawedObject = new Figure(figureArray[randnumber]);
 }
 //OBJECT MANIPULATION
