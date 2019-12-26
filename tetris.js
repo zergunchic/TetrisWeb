@@ -5,6 +5,7 @@ const redTile = new Image();
 const orangeTile = new Image();
 const greenTile = new Image();
 loadResources();
+const doublePi = 2*Math.PI;
 var updateTime = 100;
 var curTime = new Date().getTime();
 var keyPressedSet = new Set();
@@ -52,6 +53,10 @@ class CollisionManager{
 		}
 		return true;
 	}
+
+	checkRorationCollision(){
+
+	}
 }
 
 class Figure{
@@ -63,51 +68,51 @@ class Figure{
 		this.angle = 0;
 		switch(figureType){
 			case 'Cube':
-				this.elementsArray.push(new Element(4,0,this.tile,0));
-				this.elementsArray.push(new Element(5,0,this.tile,0));
-				this.elementsArray.push(new Element(5,1,this.tile,0));
-				this.elementsArray.push(new Element(4,1,this.tile,0));
+				this.elementsArray.push(new Element(4,0,this.tile,0,0));
+				this.elementsArray.push(new Element(5,0,this.tile,0,0));
+				this.elementsArray.push(new Element(5,1,this.tile,0,0));
+				this.elementsArray.push(new Element(4,1,this.tile,0,0));
 				break;
 			case 'Line':
-				this.elementsArray.push(new Element(4,0,this.tile,2));
-				this.elementsArray.push(new Element(5,0,this.tile,1));
-				this.elementsArray.push(new Element(6,0,this.tile,0));
-				this.elementsArray.push(new Element(7,0,this.tile,1));
+				this.elementsArray.push(new Element(4,0,this.tile,2,2));
+				this.elementsArray.push(new Element(5,0,this.tile,1,2));
+				this.elementsArray.push(new Element(6,0,this.tile,0,0));
+				this.elementsArray.push(new Element(7,0,this.tile,1,0));
 				break;
 
 			case 'straightG':
-				this.elementsArray.push(new Element(4,0,this.tile,1));
-				this.elementsArray.push(new Element(5,0,this.tile,0));
-				this.elementsArray.push(new Element(6,0,this.tile,1));
-				this.elementsArray.push(new Element(6,1,this.tile,2));
+				this.elementsArray.push(new Element(4,0,this.tile,1, 2));
+				this.elementsArray.push(new Element(5,0,this.tile,0, 0));
+				this.elementsArray.push(new Element(6,0,this.tile,1, 0));
+				this.elementsArray.push(new Element(6,1,this.tile,3, 1));
 				break;
 
 			case 'backG':
-				this.elementsArray.push(new Element(4,0,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(6,0,this.tile));
-				this.elementsArray.push(new Element(4,1,this.tile));
+				this.elementsArray.push(new Element(4,0,this.tile,1,2));
+				this.elementsArray.push(new Element(5,0,this.tile,0,0));
+				this.elementsArray.push(new Element(6,0,this.tile,1,0));
+				this.elementsArray.push(new Element(4,1,this.tile,3,2));
 				break;
 
 			case 'T':
-				this.elementsArray.push(new Element(4,0,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(6,0,this.tile));
-				this.elementsArray.push(new Element(5,1,this.tile));
+				this.elementsArray.push(new Element(4,1,this.tile,1,2));
+				this.elementsArray.push(new Element(5,1,this.tile,0,0));
+				this.elementsArray.push(new Element(6,1,this.tile,1,0));
+				this.elementsArray.push(new Element(5,0,this.tile,1,3));
 				break;
 
 			case 'straightR':
-				this.elementsArray.push(new Element(4,0,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(5,1,this.tile));
-				this.elementsArray.push(new Element(6,1,this.tile));
+				this.elementsArray.push(new Element(4,0,this.tile,3,3));
+				this.elementsArray.push(new Element(5,0,this.tile,1,3));
+				this.elementsArray.push(new Element(5,1,this.tile,0,0));
+				this.elementsArray.push(new Element(6,1,this.tile,1,0));
 				break;
 
 			case 'backR':
-				this.elementsArray.push(new Element(4,1,this.tile));
-				this.elementsArray.push(new Element(5,1,this.tile));
-				this.elementsArray.push(new Element(5,0,this.tile));
-				this.elementsArray.push(new Element(6,0,this.tile));
+				this.elementsArray.push(new Element(4,1,this.tile,1,2));
+				this.elementsArray.push(new Element(5,1,this.tile,0,0));
+				this.elementsArray.push(new Element(5,0,this.tile,1,3));
+				this.elementsArray.push(new Element(6,0,this.tile,3,0));
 				break;
 		}
 	}
@@ -119,8 +124,68 @@ class Figure{
 	}
 
 	rotate(){
-		this.angle+=90;
-		Math.sin(this.angle/360*Math.PI)
+		for(let element of this.elementsArray){
+			switch (element.rotationRate){
+				case 0:
+				break;
+				case 1:
+					if(element.angle == 0){
+						element.moveCoords(-1,1);
+						element.angle = 1;
+						break;
+					}
+					if(element.angle == 1){
+						element.moveCoords(-1,-1)
+						element.angle = 2;
+						break;
+					}
+					if(element.angle == 2){
+						element.moveCoords(1,-1)
+						element.angle = 3;
+						break;
+					}
+					if(element.angle == 3){
+						element.moveCoords(1,1)
+						element.angle = 0;
+						break;
+					}
+				break;
+				case 2:
+					if(element.angle == 2){
+						element.moveCoords(2,-2);
+						element.angle = 3;
+						break;
+					}
+					if(element.angle == 3){
+						element.moveCoords(-2,2);
+						element.angle = 2;
+						break;
+					}
+				break;
+				case 3:
+					if(element.angle == 0){
+						element.moveCoords(0,2);
+						element.angle = 1;
+						break;
+					}
+					if(element.angle == 1){
+						element.moveCoords(-2,0)
+						element.angle = 2;
+						break;
+					}
+					if(element.angle == 2){
+						element.moveCoords(0,-2)
+						element.angle = 3;
+						break;
+					}
+					if(element.angle == 3){
+						element.moveCoords(2,0)
+						element.angle = 0;
+						break;
+					}
+				break;
+			}
+		}
 	}
 
 	gravityAll(){
@@ -144,13 +209,14 @@ class Figure{
 }
 
 class Element{
-	constructor(tileX,tileY, tileColor,rotationRate){
+	constructor(tileX,tileY, tileColor,rotationRate,angle){
 		this.tileX = tileX;
 		this.tileY = tileY;
 		this.posX = tileX*16;
 		this.posY = tileY*16;
 		this.tileColor = tileColor;
 		this.rotationRate = rotationRate;
+		this.angle = angle;
 	}
 	paintElement(){
 		ctx.drawImage(this.tileColor, this.posX, this.posY);
@@ -167,6 +233,13 @@ class Element{
 			this.tileX =this.tileX+1;
 			this.posX = this.tileX*16;
 		}
+	}
+
+	moveCoords(incX, incY){
+			this.tileX =this.tileX+incX;
+			this.posX = this.tileX*16;
+			this.tileY =this.tileY+incY;
+			this.posY = this.tileY*16;
 	}
 
 }
@@ -262,7 +335,7 @@ document.addEventListener('keydown', function(event) {
   if(event.code == 'ArrowRight' && manager.checkCollisionsXRight()){
   	currentDrawedObject.moveAll('right');
   }
-  if(event.code == 'ArrowUP' && manager.checkRotationCollision()){
+  if(event.code == 'ArrowUp'){
   	currentDrawedObject.rotate();
   }
   if(event.code == 'Space'){
