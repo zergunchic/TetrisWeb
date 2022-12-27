@@ -1,7 +1,7 @@
-#TetrisWeb
+# TetrisWeb
 
 front-end project
 
-#Technology
+# Technology
 
-##js css html 2d-canvas 
+## js css html 2d-canvas 
